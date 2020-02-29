@@ -1,10 +1,18 @@
 # noinspection PyPackageRequirements
+import asyncio
+import logging
+
+import click
 from aiohttp.web import HTTPNotFound, middleware
 from sqlalchemy.engine.url import URL
 
-from ..api import Gino as _Gino, GinoExecutor as _Executor
-from ..engine import GinoConnection as _Connection, GinoEngine as _Engine
-from ..strategies import GinoStrategy
+from gino.api import Gino as _Gino
+from gino.api import GinoExecutor as _Executor
+from gino.engine import GinoConnection as _Connection
+from gino.engine import GinoEngine as _Engine
+from gino.strategies import GinoStrategy
+
+logger = logging.getLogger("gino.ext.aiohttp")
 
 
 class AiohttpModelMixin:
@@ -119,34 +127,54 @@ class Gino(_Gino):
         app[db_attr_name] = self
 
         if not isinstance(config, dict):
-            config = app["config"].get("gino", {})
+            self.config = app["config"].get("gino", {})
         else:
-            config = config.copy()
+            self.config = config.copy()
 
         async def before_server_start(_):
-            if "dsn" in config:
-                dsn = config["dsn"]
+            if "dsn" in self.config:
+                dsn = self.config["dsn"]
             else:
                 dsn = URL(
-                    drivername=config.setdefault("driver", "asyncpg"),
-                    host=config.setdefault("host", "localhost"),
-                    port=config.setdefault("port", 5432),
-                    username=config.setdefault("user", "postgres"),
-                    password=config.setdefault("password", ""),
-                    database=config.setdefault("database", "postgres"),
+                    drivername=self.config.setdefault("driver", "asyncpg"),
+                    host=self.config.setdefault("host", "localhost"),
+                    port=self.config.setdefault("port", 5432),
+                    username=self.config.setdefault("user", "postgres"),
+                    password=self.config.setdefault("password", ""),
+                    database=self.config.setdefault("database", "postgres"),
                 )
 
             await self.set_bind(
                 dsn,
-                echo=config.setdefault("echo", False),
-                min_size=config.setdefault("pool_min_size", 5),
-                max_size=config.setdefault("pool_max_size", 10),
-                ssl=config.setdefault("ssl"),
-                **config.setdefault("kwargs", dict()),
+                echo=self.config.setdefault("echo", False),
+                min_size=self.config.setdefault("pool_min_size", 5),
+                max_size=self.config.setdefault("pool_max_size", 10),
+                ssl=self.config.setdefault("ssl"),
+                **self.config.setdefault("kwargs", dict()),
+            )
+            msg = "Database connected: "
+            logger.info(
+                msg + format_engine(self.bind),
+                extra={
+                    "color_message": msg + format_engine(self.bind, color=True)
+                },
             )
 
         async def after_server_stop(_):
-            await self.pop_bind().close()
+            msg = "Closing database connection: "
+            logger.info(
+                msg + format_engine(self.bind),
+                extra={
+                    "color_message": msg + format_engine(self.bind, color=True)
+                },
+            )
+            _bind = self.pop_bind()
+            await _bind.close()
+            msg = "Closed database connection: "
+            logger.info(
+                msg + format_engine(_bind),
+                extra={"color_message": msg + format_engine(_bind, color=True)},
+            )
 
         app.on_startup.append(before_server_start)
         app.on_cleanup.append(after_server_stop)
@@ -159,4 +187,66 @@ class Gino(_Gino):
 
     async def set_bind(self, bind, **kwargs):
         kwargs.setdefault("strategy", "aiohttp")
-        return await super().set_bind(bind, **kwargs)
+        for retries in range(self.config.setdefault("retry_times", 5)):
+            try:
+                if retries == 0:
+                    logger.info("Connecting to database...")
+                else:
+                    logger.info("Retrying to connect to database...")
+                return await super().set_bind(bind, **kwargs)
+            except ConnectionError:
+                logger.info(
+                    f"Waiting {self.config.setdefault('retry_interval',5)}s to reconnect..."
+                )
+                await asyncio.sleep(self.config["retry_interval"])
+        logger.error("Max retries reached.")
+        raise ConnectionError("Database connection error!")
+
+
+def format_engine(engine, color=False):
+    if color:
+        return "<{classname} max={max} min={min} cur={cur} use={use}>".format(
+            classname=click.style(
+                engine.raw_pool.__class__.__module__
+                + "."
+                + engine.raw_pool.__class__.__name__,
+                fg="green",
+            ),
+            max=click.style(repr(engine.raw_pool._maxsize), fg="cyan"),
+            min=click.style(repr(engine.raw_pool._minsize), fg="cyan"),
+            cur=click.style(
+                repr(
+                    len(
+                        [
+                            0
+                            for con in engine.raw_pool._holders
+                            if con._con and not con._con.is_closed()
+                        ]
+                    )
+                ),
+                fg="cyan",
+            ),
+            use=click.style(
+                repr(
+                    len([0 for con in engine.raw_pool._holders if con._in_use])
+                ),
+                fg="cyan",
+            ),
+        )
+    else:
+        # noinspection PyProtectedMember
+        return "<{classname} max={max} min={min} cur={cur} use={use}>".format(
+            classname=engine.raw_pool.__class__.__module__
+            + "."
+            + engine.raw_pool.__class__.__name__,
+            max=engine.raw_pool._maxsize,
+            min=engine.raw_pool._minsize,
+            cur=len(
+                [
+                    0
+                    for con in engine.raw_pool._holders
+                    if con._con and not con._con.is_closed()
+                ]
+            ),
+            use=len([0 for con in engine.raw_pool._holders if con._in_use]),
+        )
