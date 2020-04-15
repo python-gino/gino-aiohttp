@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.asyncio
+
+
 async def _test_index_returns_200(test_client):
     response = await test_client.get("/")
     assert response.status == 200

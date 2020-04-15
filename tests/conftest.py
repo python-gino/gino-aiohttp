@@ -1,4 +1,6 @@
+import asyncio
 import os
+import ssl
 
 import pytest
 from aiohttp import web
@@ -94,7 +96,8 @@ async def _test_client(config, in_app_config=True):
     try:
         try:
             await db.gino.create_all(e)
-            async with TestClient(TestServer(app)) as rv:
+            loop = asyncio.get_event_loop()
+            async with TestClient(TestServer(app), loop=loop) as rv:
                 await yield_(rv)
         finally:
             await db.gino.drop_all(e)
@@ -118,3 +121,11 @@ async def test_client_dsn(request):
 @async_generator
 async def test_client_ssl(ssl_ctx, request):
     await _test_client(dict(dsn=PG_URL, ssl=ssl_ctx), request.param)
+
+
+@pytest.fixture
+def ssl_ctx():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
