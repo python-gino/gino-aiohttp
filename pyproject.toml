@@ -41,7 +41,7 @@ pytest-cov = "^2.8.1"
 requests = "^2.22.0"
 
 [tool.poetry.plugins."gino.extensions"]
-"starlette" = "gino_aiohttp"
+"aiohttp" = "gino_aiohttp"
 
 [tool.black]
 line-length = 80
