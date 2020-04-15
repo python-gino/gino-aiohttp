@@ -30,6 +30,7 @@ aiohttp = "*"
 gino = { git = "https://github.com/python-gino/gino.git" }
 
 [tool.poetry.dev-dependencies]
+click = "^7.1"
 async_generator = "^1.10"
 black = { version = "^19.10b0", python = ">=3.6" }
 

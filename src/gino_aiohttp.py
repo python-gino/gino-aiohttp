@@ -173,7 +173,9 @@ class Gino(_Gino):
             msg = "Closed database connection: "
             logger.info(
                 msg + format_engine(_bind),
-                extra={"color_message": msg + format_engine(_bind, color=True)},
+                extra={
+                    "color_message": msg + format_engine(_bind, color=True),
+                },
             )
 
         app.on_startup.append(before_server_start)
@@ -196,8 +198,8 @@ class Gino(_Gino):
                 return await super().set_bind(bind, **kwargs)
             except ConnectionError:
                 logger.info(
-                    f"Waiting {self.config.setdefault('retry_interval',5)}s to reconnect..."
-                )
+                    "Waiting {}s to reconnect...".format(
+                        self.config.setdefault('retry_interval',5)))
                 await asyncio.sleep(self.config["retry_interval"])
         logger.error("Max retries reached.")
         raise ConnectionError("Database connection error!")
