@@ -199,7 +199,9 @@ class Gino(_Gino):
             except ConnectionError:
                 logger.info(
                     "Waiting {}s to reconnect...".format(
-                        self.config.setdefault('retry_interval',5)))
+                        self.config.setdefault("retry_interval", 5)
+                    )
+                )
                 await asyncio.sleep(self.config["retry_interval"])
         logger.error("Max retries reached.")
         raise ConnectionError("Database connection error!")

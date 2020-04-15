@@ -51,7 +51,7 @@ jobs:
     - name: Check code format with black
       if: matrix.python-version >= '3.6'
       run: |
-          $HOME/.poetry/bin/poetry run black --check gino
+          $HOME/.poetry/bin/poetry run black --check src
     - name: Submit coverage report
       if: matrix.python-version == '3.8' && matrix.postgres-version == '12.1' && github.ref == 'refs/heads/master'
       env:
