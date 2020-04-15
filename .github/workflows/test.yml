@@ -47,7 +47,7 @@ jobs:
         DB_HOST: localhost
         DB_USER: gino
       run: |
-        $HOME/.poetry/bin/poetry run pytest --cov=gino.ext.aiohttp --cov-fail-under=95 --cov-report xml
+        $HOME/.poetry/bin/poetry run pytest --cov=src --cov-fail-under=90 --cov-report xml
     - name: Check code format with black
       if: matrix.python-version >= '3.6'
       run: |
