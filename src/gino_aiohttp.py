@@ -187,7 +187,7 @@ class Gino(_Gino):
             raise HTTPNotFound(reason="No such data")
         return rv
 
-    async def set_bind(self, bind, **kwargs):
+    async def set_bind(self, bind, loop=None, **kwargs):
         kwargs.setdefault("strategy", "aiohttp")
         for retries in range(self.config.setdefault("retry_times", 5)):
             try:
@@ -195,7 +195,7 @@ class Gino(_Gino):
                     logger.info("Connecting to database...")
                 else:
                     logger.info("Retrying to connect to database...")
-                return await super().set_bind(bind, **kwargs)
+                return await super().set_bind(bind, loop, **kwargs)
             except ConnectionError:
                 logger.info(
                     "Waiting {}s to reconnect...".format(
