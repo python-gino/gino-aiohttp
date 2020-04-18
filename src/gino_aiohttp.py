@@ -1,10 +1,10 @@
-# noinspection PyPackageRequirements
-from aiohttp.web import HTTPNotFound, middleware
-from sqlalchemy.engine.url import URL
+import asyncio
 
-from ..api import Gino as _Gino, GinoExecutor as _Executor
-from ..engine import GinoConnection as _Connection, GinoEngine as _Engine
-from ..strategies import GinoStrategy
+from aiohttp.web import HTTPNotFound, middleware
+from gino.api import Gino as _Gino, GinoExecutor as _Executor
+from gino.engine import GinoConnection as _Connection, GinoEngine as _Engine
+from gino.strategies import GinoStrategy
+from sqlalchemy.engine.url import URL
 
 
 class AiohttpModelMixin:
@@ -136,14 +136,23 @@ class Gino(_Gino):
                     database=config.setdefault("database", "postgres"),
                 )
 
-            await self.set_bind(
-                dsn,
-                echo=config.setdefault("echo", False),
-                min_size=config.setdefault("pool_min_size", 5),
-                max_size=config.setdefault("pool_max_size", 10),
-                ssl=config.setdefault("ssl"),
-                **config.setdefault("kwargs", dict()),
-            )
+            retries = 0
+            while True:
+                try:
+                    await self.set_bind(
+                        dsn,
+                        echo=config.setdefault("echo", False),
+                        min_size=config.setdefault("pool_min_size", 5),
+                        max_size=config.setdefault("pool_max_size", 10),
+                        ssl=config.setdefault("ssl"),
+                        **config.setdefault("kwargs", dict()),
+                    )
+                    break
+                except Exception:
+                    if retries < config.setdefault("retry_limit", 1):
+                        await asyncio.sleep(config.setdefault("retry_interval", 1))
+                    else:
+                        raise
 
         async def after_server_stop(_):
             await self.pop_bind().close()
