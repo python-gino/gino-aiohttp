@@ -7,7 +7,7 @@ authors = ["Fantix King <fantix.king@gmail.com>"]
 readme = "README.md"
 homepage = "https://github.com/python-gino/gino-aiohttp"
 repository = "https://github.com/python-gino/gino-aiohttp"
-documentation = "https://python-gino.readthedocs.io/"
+documentation = "https://python-gino.org/docs/"
 keywords = ["sqlalchemy", "python3", "aiohttp", "gino"]
 classifiers = [
     "Development Status :: 4 - Beta",
