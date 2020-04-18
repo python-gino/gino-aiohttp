@@ -27,6 +27,8 @@ aiohttp = "^3.6.2"
 gino = { version = "^1.0.0rc2", allow-prereleases = true }
 
 [tool.poetry.dev-dependencies]
+click = "^7.1"
+async_generator = "^1.10"
 black = { version = "^19.10b0", python = ">=3.6" }
 
 # tests
