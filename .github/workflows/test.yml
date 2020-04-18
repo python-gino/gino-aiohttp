@@ -33,14 +33,11 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    # TODO: github cache is buggy, disable for now
-    #- name: virtualenv cache
-      #uses: actions/cache@preview
-      #with:
-        #path: ~/.cache/pypoetry/virtualenvs
-        #key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
-        #restore-keys: |
-          #${{ runner.os }}-${{ matrix.python-version }}-poetry-
+    - name: virtualenv cache
+      uses: actions/cache@preview
+      with:
+        path: ~/.cache/pypoetry/virtualenvs
+        key: ${{ runner.os }}-${{ matrix.python-version }}-poetry-${{ hashFiles(format('{0}{1}', github.workspace, '/poetry.lock')) }}
     - name: Install Python dependencies
       run: |
         curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
