@@ -16,6 +16,7 @@ gunicorn = "^20.0.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.1"
+async_generator = "^1.10"
 pytest-asyncio = "^0.10.0"
 
 [tool.poetry.plugins."gino_aiohttp_demo.modules"]
