@@ -150,6 +150,7 @@ class Gino(_Gino):
                     break
                 except Exception:
                     if retries < config.setdefault("retry_limit", 1):
+                        retries += 1
                         await asyncio.sleep(config.setdefault("retry_interval", 1))
                     else:
                         raise
