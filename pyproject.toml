@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gino-aiohttp"
-version = "0.1.0"
+version = "0.2.0"
 description = "An extension for GINO to integrate with aiohttp"
 license = "BSD-3-Clause"
 authors = ["Fantix King <fantix.king@gmail.com>"]
@@ -15,21 +15,20 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
 ]
 
 [tool.poetry.dependencies]
-python = "^3.5.3"
-aiohttp = "^3.6.2"
-gino = { version = "^1.0.0rc2", allow-prereleases = true }
+python = "^3.6"
+aiohttp = "^3.7.2"
+gino = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 click = "^7.1"
 async_generator = "^1.10"
-black = { version = "^19.10b0", python = ">=3.6" }
+black = "^19.10b0"
 
 # tests
 pytest = "^5.3.2"
