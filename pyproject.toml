@@ -34,7 +34,7 @@ black = "^20.8b1"
 pytest = "^6.1.2"
 pytest-asyncio = "^0.14.0"
 pytest-cov = "^2.8.1"
-pytest-mock = "^3.3.1"
+pytest-mock = "^3.6.0"
 pytest-virtualenv = "^1.7.0"
 requests = "^2.22.0"
 
